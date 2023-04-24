@@ -22,4 +22,4 @@ class Edge:
         self.rotation = math.atan2(end.y - start.y, end.x - start.x)
 
     def __repr__(self):
-        return str(edges_arr.index(self))
+        return str(f"[{str(self.start)}; {str(self.end)}]")

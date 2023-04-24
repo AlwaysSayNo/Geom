@@ -48,9 +48,16 @@ for i, chain in enumerate(chains):
     print()
 
 result = algo.find(point, chains)
+result_len = len(result)
 
-if result is not None:
-    print(f"Point is between chains {result[0]} and {result[1]}")
+if result_len != 0:
+    if result_len == 1:
+        first = result[0]
+        print(f"Point is on chain {first} on edge {algo.find_on_edge(point, chains[first])}")
+    else:
+        first, second = result
+        print(f"Point is between chains {first} and {second}"
+              f" and the closest edge is {algo.find_closest_edge(point, chains[first], chains[second])}")
 else:
     print("Point is not inside graph")
 

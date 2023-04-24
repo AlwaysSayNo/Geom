@@ -3,6 +3,9 @@ import math
 from typing import List
 from entity import Point
 from entity import Edge
+from numpy import array
+from numpy import cross
+from numpy.linalg import norm
 
 
 def sum_weight(edges: List[Edge]) -> int:
@@ -77,20 +80,73 @@ def create_chains(v_arr: List[Point], ordered_edges: List[List[Edge]]) -> List[L
 def find(point: Point, chains):
     for i in range(0, len(chains)):
         for e in chains[i]:
-            point_start_vector = Point(point.x - e.start.x, point.y - e.start.y)
-            point_end_vector = Point(point.x - e.end.x, point.y - e.end.y)
 
-            if math.atan2(point_start_vector.y, point_start_vector.x) == 0 \
-                    or math.atan2(point_end_vector.y, point_end_vector.x) == 0:
-                if i == 0:
-                    return [0, 1]
-                else:
-                    return [i - 1, i]
+            if e.start.y <= point.y <= e.end.y:
 
-            if e.start.y < point.y < e.end.y:
+                if is_on_vertex(point, e) or is_on_edge(point, e):
+                    if i == 0:
+                        return [0]
+                    else:
+                        return [i]
+
+                point_vector = Point(point.x - e.start.x, point.y - e.start.y)
                 edge_vector = Point(e.end.x - e.start.x, e.end.y - e.start.y)
 
-                if math.atan2(point_start_vector.y, point_start_vector.x) > math.atan2(edge_vector.y, edge_vector.x):
+                if math.atan2(point_vector.y, point_vector.x) > math.atan2(edge_vector.y, edge_vector.x):
                     if i == 0:
-                        return None
+                        return []
                     return [i - 1, i]
+    return []
+
+
+def is_on_vertex(point: Point, e: Edge):
+    """
+        If point is on vertex then it should have diff_x == 0 and diff_y == 0 with this vertex
+    """
+    start_v, end_v = get_vertexes_with_edge(point, e)
+
+    return start_v.y == start_v.x == 0 \
+        or end_v.y == end_v.x == 0
+
+
+def is_on_edge(point: Point, e: Edge):
+    """
+        If point is on edge then one of vertex coordinate should be equal to 0
+    """
+    start_v, end_v = get_vertexes_with_edge(point, e)
+
+    return start_v.x == end_v.x == 0 \
+        or start_v.y == end_v.y == 0
+
+
+def get_vertexes_with_edge(point: Point, e: Edge):
+    start_v = Point(point.x - e.start.x, point.y - e.start.y)
+    end_v = Point(point.x - e.end.x, point.y - e.end.y)
+
+    return [start_v, end_v]
+
+
+def find_on_edge(point: Point, chain: List[Edge]):
+    return find_on_edges(point, chain)[0]
+
+
+def find_on_edges(point: Point, chain: List[Edge]):
+    return [e for e in chain if e.start.y <= point.y <= e.end.y]
+
+
+def find_closest_edge(point: Point, l_chain: List[Edge], r_chain: List[Edge]):
+    min_d = None
+    edge = None
+
+    for e in find_on_edges(point, l_chain + r_chain):
+        curr_d = point_line_distance(point, e)
+        if min_d is None or min_d >= curr_d:
+            min_d = curr_d
+            edge = e
+
+    return edge
+
+
+def point_line_distance(p: Point, line: Edge):
+    p1, p2, p3 = array([p.x, p.y]), array([line.start.x, line.start.y]), array([line.end.x, line.end.y])
+    return norm(cross(p2 - p1, p1 - p3)) / norm(p2 - p1)
